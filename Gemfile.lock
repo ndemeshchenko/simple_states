@@ -1,0 +1,16 @@
+PATH
+  remote: .
+  specs:
+    simple_states (0.0.1)
+
+GEM
+  remote: http://rubygems.org/
+  specs:
+    test_declarative (0.0.5)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  simple_states!
+  test_declarative
