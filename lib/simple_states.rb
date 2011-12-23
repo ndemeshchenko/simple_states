@@ -3,8 +3,9 @@ require 'active_support/core_ext/class/inheritable_attributes'
 require 'active_support/core_ext/kernel/singleton_class'
 
 module SimpleStates
-  class TransitionException < RuntimeError; end
-  
+  class TransitionException < RuntimeError;
+  end
+
   autoload :Event, 'simples_states/event'
 
   extend ActiveSupport::Concern
@@ -13,11 +14,11 @@ module SimpleStates
     def install(object)
       target = object.singleton_class
       object.class.events.each { |event| define_event(target, event) }
-      object.class.events.each { |event| define_predicates(target, state)}
+      object.class.events.each { |event| define_predicates(target, state) }
     end
 
     def define_event(target, event)
-      target.send(:define_method, event.name) do |*args| 
+      target.send(:define_method, event.name) do |*args|
         event.call(self, *args) do
           super(*args) if self.class.method_defined?(event.name)
         end
@@ -38,14 +39,18 @@ module SimpleStates
       end
     end
   end
-    
-  included do 
+
+  included do
     class_inheritable_accessor :state_names, :events
     self.state_names, self.events = [], []
-  end    
+  end
 
   module ClassMethods
-    def new
+    def new(*)
+      super.tap { |object| SimpleStates.install(object) }
+    end
+
+    def allocate
       super.tap { |object| SimpleStates.install(object) }
     end
 
