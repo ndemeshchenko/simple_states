@@ -3,8 +3,7 @@ require 'active_support/core_ext/class/inheritable_attributes'
 require 'active_support/core_ext/kernel/singleton_class'
 
 module SimpleStates
-  class TransitionException < RuntimeError;
-  end
+  class TransitionException < RuntimeError; end
 
   autoload :Event, 'simples_states/event'
 
@@ -14,7 +13,7 @@ module SimpleStates
     def install(object)
       target = object.singleton_class
       object.class.events.each { |event| define_event(target, event) }
-      object.class.events.each { |event| define_predicates(target, state) }
+      object.class.events.each { |event| define_predicates(target, state)}
     end
 
     def define_event(target, event)
