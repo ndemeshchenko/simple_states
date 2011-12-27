@@ -1,11 +1,12 @@
 require 'active_support/concern'
 require 'active_support/core_ext/class/inheritable_attributes'
 require 'active_support/core_ext/kernel/singleton_class'
+require 'active_support/core_ext/object/try'
 
 module SimpleStates
   class TransitionException < RuntimeError; end
 
-  autoload :Event, 'simples_states/event'
+  autoload :Event, 'simple_states/event'
 
   extend ActiveSupport::Concern
 
@@ -13,7 +14,7 @@ module SimpleStates
     def install(object)
       target = object.singleton_class
       object.class.events.each { |event| define_event(target, event) }
-      object.class.events.each { |event| define_predicates(target, state)}
+      object.class.states.each { |state| define_predicates(target, state) }
     end
 
     def define_event(target, event)
@@ -22,19 +23,19 @@ module SimpleStates
           super(*args) if self.class.method_defined?(event.name)
         end
       end
-      target.send(:defined_method, :"#{event.name}!") do |*args|
+      target.send(:define_method, :"#{event.name}!") do |*args|
         send(event.name, *args)
         save!
       end
     end
 
     def define_predicates(target, _state)
-      target.send(:define_method, :"#{_state}") do |args|
-        args.first ? send(:"was_#{_state}?") : state == _state
+      target.send(:define_method, :"#{_state}?") do |*args|
+        args.first ? send(:"was_#{_state}?") : state.try(:to_sym) == _state
       end
 
-      target.send(:define_method, :"was_#{_sstate}?") do
-        past_states.concat([state].include?(_state))
+      target.send(:define_method, :"was_#{_state}?") do
+        past_states.concat([state.try(:to_sym)]).compact.include?(_state)
       end
     end
   end
@@ -53,13 +54,13 @@ module SimpleStates
       super.tap { |object| SimpleStates.install(object) }
     end
 
-    def state(*args)
-      args.epmty? ? state_name : self.state_names = args
+    def states(*args)
+      args.empty? ? state_names : self.state_names = args.map(&:to_sym)
     end
 
-    def event(name, option = {})
+    def event(name, options = {})
       self.states << options[:from] if options[:from]
-      self.state << options[:to] if options[:to]
+      self.states << options[:to]   if options[:to]
       self.events << Event.new(name, options)
     end
   end
@@ -70,20 +71,3 @@ module SimpleStates
     @past_states ||= []
   end
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
