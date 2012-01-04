@@ -3,7 +3,7 @@ require 'hashr'
 
 module SimpleStates
   class Event
-    attr_reader :name, :options
+    attr_accessor :name, :options
 
     def initialize(name, options = {})
       @name    = name
@@ -12,6 +12,11 @@ module SimpleStates
           self[:except]
         end
       end
+    end
+
+    def saving
+      @saving = true
+      yield.tap { @saving = false }
     end
 
     def call(object, *args)
@@ -23,6 +28,7 @@ module SimpleStates
       yield.tap do
         set_state(object)
         run_callback(:after, object, args)
+        object.save! if @saving
       end
     end
 
@@ -50,7 +56,8 @@ module SimpleStates
           object.past_states << object.state if object.state
           object.state = state.to_sym
           object.send(:"#{state}_at=", Time.now) if object.respond_to?(:"#{state}_at=")
-        end
+          object.save! if @saving
+	end
       end
 
       def send_method(object, method, args)
