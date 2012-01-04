@@ -18,7 +18,8 @@ Gem::Specification.new do |s|
   s.rubyforge_project = '[none]'
 
 	s.add_dependency 'activesupport'
-	s.add_dependency 'test_declarative'  
+	s.add_dependency 'test_declarative'
 
 	s.add_development_dependency 'test_declarative'
+  s.add_development_dependency 'mocha'
 end
